@@ -103,7 +103,9 @@ const users = [
 async function main() {
   console.log("Seeding database...");
 
-  // Clear existing
+  // Clear existing in correct order
+  await prisma.like.deleteMany();
+  await prisma.savedPoem.deleteMany();
   await prisma.comment.deleteMany();
   await prisma.poem.deleteMany();
   await prisma.category.deleteMany();
