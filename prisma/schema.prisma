@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Poem {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  author    String   // Keeping the string for legacy/display
+  authorId  String?
+  authorRef User?    @relation("UserPoems", fields: [authorId], references: [id])
+  category  String
+  views     Int      @default(0)
+  downloads Int      @default(0)
+  shares    Int      @default(0)
+  hasAudio  Boolean  @default(false)
+  audioUrl  String?
+  imageUrl  String?
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  comments  Comment[]
+  likes     Like[]
+  savedBy   SavedPoem[]
+}
+
+model Like {
+  userId    String
+  poemId    String
+  user      User     @relation(fields: [userId], references: [id])
+  poem      Poem     @relation(fields: [poemId], references: [id])
+  createdAt DateTime @default(now())
+  @@id([userId, poemId])
+}
+
+model SavedPoem {
+  userId    String
+  poemId    String
+  user      User     @relation(fields: [userId], references: [id])
+  poem      Poem     @relation(fields: [poemId], references: [id])
+  createdAt DateTime @default(now())
+  @@id([userId, poemId])
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  poemId      String
+  poem        Poem     @relation(fields: [poemId], references: [id])
+  userId      String
+  userName    String
+  text        String
+  adminReply  String?
+  repliedAt   DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String?  // Nullable if they only use Google
+  googleId  String?  @unique
+  avatarUrl String?
+  role      String   @default("client") // "admin" | "client"
+  phone     String?
+  birthday  DateTime?
+  marketingConsent Boolean @default(false)
+  blocked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  likes     Like[]
+  saved     SavedPoem[]
+  poems     Poem[]   @relation("UserPoems")
+}
+
+model Category {
+  id        String @id @default(cuid())
+  name      String @unique
+  poemCount Int    @default(0)
+}
